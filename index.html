@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GRC Workspace — SecureBank Fintech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F5F3EE; --ink: #1B2430; --ink-soft: #4A5563; --line: #D8D3C6;
+    --teal: #1F5B57; --teal-deep: #143E3B; --red: #A63A2E; --amber: #B5772B; --green: #4B7A55; --card: #FFFFFF;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); box-sizing: border-box;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --paper:#171B20;--ink:#E8E6E0;--ink-soft:#A9AFB8;--line:#333B44;--teal:#4FA39C;--teal-deep:#2C6560;--card:#1F252C; }
+  }
+  :root[data-theme="dark"] { --paper:#171B20;--ink:#E8E6E0;--ink-soft:#A9AFB8;--line:#333B44;--teal:#4FA39C;--teal-deep:#2C6560;--card:#1F252C; }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:'IBM Plex Sans',system-ui,sans-serif; line-height:1.5; min-height:100%; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 2.2rem 1.5rem 4rem; }
+  header.masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.1rem; margin-bottom: 1.6rem; display:flex; justify-content:space-between; align-items:flex-end; gap:1rem; flex-wrap:wrap; }
+  h1 { font-family:'Source Serif 4',Georgia,serif; font-weight:700; font-size:clamp(1.5rem,3vw,2.1rem); margin:0; letter-spacing:-0.01em; }
+  .masthead .meta { font-family:'IBM Plex Mono',monospace; font-size:0.76rem; color:var(--ink-soft); text-align:right; }
+
+  nav.tabs { display:flex; gap:0.3rem; margin-bottom:1.6rem; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  nav.tabs button { background:none; border:none; padding:0.65rem 1rem; font-family:'IBM Plex Sans',sans-serif; font-size:0.88rem; font-weight:500; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+  nav.tabs button.active { color:var(--teal-deep); border-bottom-color:var(--teal); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) nav.tabs button.active { color:var(--teal); } }
+  :root[data-theme="dark"] nav.tabs button.active { color:var(--teal); }
+
+  .dashboard { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); margin-bottom:1.8rem; }
+  .stat-cell { background:var(--card); padding:0.9rem 1rem; }
+  .stat-cell .num { font-family:'Source Serif 4',serif; font-size:1.7rem; font-weight:600; line-height:1; }
+  .stat-cell .lbl { font-family:'IBM Plex Mono',monospace; font-size:0.63rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft); margin-top:0.3rem; }
+  .stat-cell.crit .num { color:var(--red); } .stat-cell.high .num { color:var(--amber); } .stat-cell.ok .num { color:var(--green); }
+
+  .view { display:none; }
+  .view.active { display:block; }
+  .layout { display:grid; grid-template-columns:minmax(0,1fr); gap:1.6rem; }
+  @media (min-width:920px) { .layout.split { grid-template-columns:380px minmax(0,1fr); align-items:start; } }
+  .panel { background:var(--card); border:1px solid var(--line); }
+  .panel-head { padding:0.9rem 1.1rem; border-bottom:1px solid var(--line); font-family:'Source Serif 4',serif; font-weight:600; font-size:1rem; }
+  .panel-body { padding:1.1rem; }
+  label { display:block; font-size:0.8rem; color:var(--ink-soft); margin-bottom:0.28rem; margin-top:0.9rem; }
+  label:first-of-type { margin-top:0; }
+  input[type=text], input[type=number], select, textarea {
+    width:100%; padding:0.5rem 0.6rem; border:1px solid var(--line); background:var(--paper); color:var(--ink);
+    font-family:inherit; font-size:0.88rem; border-radius:2px;
+  }
+  textarea { resize:vertical; min-height:3rem; }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline:2px solid var(--teal); outline-offset:1px; }
+
+  .risk-options { display:flex; flex-direction:column; gap:0.45rem; margin-top:0.55rem; }
+  .risk-opt { text-align:left; padding:0.55rem 0.65rem; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-size:0.82rem; cursor:pointer; border-radius:2px; }
+  .risk-opt:hover { border-color:var(--teal); }
+  .risk-opt.selected { border-color:var(--teal); background:color-mix(in srgb, var(--teal) 12%, var(--card)); }
+  .custom-tag { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:var(--teal); display:block; margin-top:0.15rem; }
+
+  .autofill-box { margin-top:0.9rem; padding:0.8rem; background:color-mix(in srgb, var(--teal) 8%, var(--card)); border:1px solid var(--teal); border-radius:2px; font-size:0.82rem; }
+  .autofill-box .row { margin-bottom:0.5rem; } .autofill-box .row:last-child { margin-bottom:0; }
+  .autofill-box .k { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; color:var(--teal-deep); text-transform:uppercase; letter-spacing:0.03em; display:block; margin-bottom:0.12rem; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .autofill-box .k { color:var(--teal); } }
+  :root[data-theme="dark"] .autofill-box .k { color:var(--teal); }
+
+  .scoring { display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; margin-top:0.9rem; }
+  .score-badge { margin-top:0.8rem; padding:0.45rem 0.65rem; font-family:'IBM Plex Mono',monospace; font-size:0.8rem; border-radius:2px; display:inline-block; }
+
+  .btn { margin-top:1.1rem; width:100%; padding:0.65rem; background:var(--teal-deep); color:#fff; border:none; font-family:'IBM Plex Sans',sans-serif; font-weight:500; font-size:0.88rem; cursor:pointer; border-radius:2px; }
+  .btn:hover { background:var(--teal); }
+  .btn-ghost { background:transparent; color:var(--ink-soft); border:1px solid var(--line); }
+  .btn-ghost:hover { border-color:var(--ink-soft); color:var(--ink); background:transparent; }
+  .btn-sm { width:auto; padding:0.4rem 0.8rem; margin:0; font-size:0.82rem; }
+
+  table { width:100%; border-collapse:collapse; font-size:0.81rem; }
+  th, td { text-align:left; padding:0.55rem 0.65rem; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft); font-weight:500; }
+  .pill { display:inline-block; padding:0.14rem 0.48rem; font-family:'IBM Plex Mono',monospace; font-size:0.68rem; border-radius:2px; white-space:nowrap; }
+  .pill-critical { background:color-mix(in srgb, var(--red) 18%, transparent); color:var(--red); }
+  .pill-high { background:color-mix(in srgb, var(--amber) 20%, transparent); color:var(--amber); }
+  .pill-medium { background:color-mix(in srgb, var(--green) 18%, transparent); color:var(--green); }
+  .annex-code { font-family:'IBM Plex Mono',monospace; color:var(--teal-deep); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .annex-code { color:var(--teal); } }
+  :root[data-theme="dark"] .annex-code { color:var(--teal); }
+
+  .empty { padding:2.2rem 1.1rem; text-align:center; color:var(--ink-soft); font-size:0.88rem; }
+  .row-actions button { background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:0.76rem; text-decoration:underline; padding:0; margin-right:0.6rem; }
+  .row-actions button:hover { color:var(--red); }
+  .toolbar { display:flex; justify-content:space-between; align-items:center; padding:0.85rem 1.1rem; border-bottom:1px solid var(--line); gap:0.7rem; flex-wrap:wrap; }
+  .toolbar .count { font-size:0.8rem; color:var(--ink-soft); }
+  .table-wrap { overflow-x:auto; }
+  .hint { font-size:0.74rem; color:var(--ink-soft); margin-top:0.28rem; }
+  .edit-input { width:100%; padding:0.28rem; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-family:inherit; font-size:0.8rem; }
+  .link-tag { font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--teal-deep); background:color-mix(in srgb, var(--teal) 10%, transparent); padding:0.1rem 0.4rem; border-radius:2px; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .link-tag { color:var(--teal); } }
+  :root[data-theme="dark"] .link-tag { color:var(--teal); }
+
+  .matrix-wrap { display:flex; gap:0.6rem; align-items:flex-end; margin: 1rem 0 0.5rem; overflow-x:auto; }
+  .matrix-yaxis { display:flex; flex-direction:column-reverse; gap:2px; font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--ink-soft); }
+  .matrix-yaxis span, .matrix-cell { height:64px; display:flex; align-items:center; justify-content:center; }
+  .matrix-yaxis span { justify-content:flex-end; padding-right:0.4rem; width:70px; }
+  .matrix-grid { display:grid; grid-template-columns:repeat(5,64px); grid-template-rows:repeat(5,64px); gap:2px; }
+  .matrix-cell { border-radius:2px; font-family:'IBM Plex Mono',monospace; font-size:1rem; font-weight:600; color:#fff; cursor:default; position:relative; }
+  .matrix-cell .cell-count { font-size:1.15rem; }
+  .matrix-cell .cell-label { position:absolute; bottom:2px; font-size:0.55rem; opacity:0.85; font-weight:400; }
+  .matrix-xaxis { display:grid; grid-template-columns:repeat(5,64px); gap:2px; margin-left:74px; font-family:'IBM Plex Mono',monospace; font-size:0.68rem; color:var(--ink-soft); text-align:center; margin-top:0.3rem; }
+  .matrix-axis-title { font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); text-align:center; margin-top:0.4rem; }
+  .matrix-y-title { writing-mode: vertical-rl; transform: rotate(180deg); font-family:'IBM Plex Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); }
+
+  .chart-wrap { margin-top:0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <h1>GRC Workspace — SecureBank Fintech</h1>
+    <div class="meta">Risk Register · Vendor Risk · Issue Tracker<br>Connected modules with a shared dashboard</div>
+  </header>
+
+  <div class="dashboard" id="dashboard"></div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="risks">Risk Register</button>
+    <button class="tab-btn" data-view="vendors">Vendors</button>
+    <button class="tab-btn" data-view="issues">Issue Tracker</button>
+    <button class="tab-btn" data-view="policies">Policy Library</button>
+    <button class="tab-btn" data-view="soa">Statement of Applicability</button>
+    <button class="tab-btn" data-view="auditlog">Audit Log</button>
+  </nav>
+
+  <!-- ===== RISK REGISTER VIEW ===== -->
+  <div class="view active" id="view-risks">
+    <div class="panel" style="margin-bottom:1.6rem;">
+      <div class="panel-head">Risk Matrix (Likelihood × Impact)</div>
+      <div class="panel-body" id="riskMatrixContainer"></div>
+    </div>
+    <div class="layout split">
+      <div class="panel">
+        <div class="panel-head">New Risk Entry</div>
+        <div class="panel-body">
+          <label for="assetName">Asset Name</label>
+          <input type="text" id="assetName" placeholder="e.g. Customer Database">
+
+          <label for="assetType">Asset Type</label>
+          <select id="assetType"></select>
+
+          <div id="riskSection" style="display:none;">
+            <label>Suggested Risks</label>
+            <div class="risk-options" id="riskOptions"></div>
+            <div class="hint">Click a risk — control and owner will auto-fill.</div>
+          </div>
+
+          <div id="autofillSection" style="display:none;">
+            <label>Risk Statement</label>
+            <textarea id="riskText"></textarea>
+
+            <div class="scoring">
+              <div><label style="margin-top:0.4rem;">Likelihood (1–5)</label>
+                <select id="likelihood">
+                  <option value="1">1 — Rare</option><option value="2">2 — Unlikely</option>
+                  <option value="3" selected>3 — Possible</option><option value="4">4 — Likely</option>
+                  <option value="5">5 — Almost certain</option>
+                </select></div>
+              <div><label style="margin-top:0.4rem;">Impact (1–5)</label>
+                <select id="impact">
+                  <option value="1">1 — Negligible</option><option value="2">2 — Minor</option>
+                  <option value="3">3 — Moderate</option><option value="4" selected>4 — Major</option>
+                  <option value="5">5 — Severe</option>
+                </select></div>
+            </div>
+            <div id="scoreBadge" class="score-badge"></div>
+
+            <div class="autofill-box">
+              <div class="row"><span class="k">Suggested Control</span><input type="text" class="edit-input" id="controlText"></div>
+              <div class="row"><span class="k">ISO 27001 Annex A</span><input type="text" class="edit-input" id="annexText"></div>
+              <div class="row"><span class="k">Suggested Owner</span><input type="text" class="edit-input" id="ownerText"></div>
+            </div>
+
+            <label for="linkedVendor">Linked Vendor (optional)</label>
+            <select id="linkedVendor"><option value="">— none —</option></select>
+
+            <label for="evidenceText">Evidence</label>
+            <textarea id="evidenceText" placeholder="Screenshot, report, document link..."></textarea>
+
+            <label for="treatmentSelect">Treatment Decision</label>
+            <select id="treatmentSelect">
+              <option value="">— select —</option>
+              <option value="Mitigate">Mitigate</option><option value="Accept">Accept</option>
+              <option value="Transfer">Transfer</option><option value="Avoid">Avoid</option>
+            </select>
+            <div class="hint" id="treatmentHint"></div>
+
+            <button class="btn" id="saveRiskBtn">Save to Register</button>
+            <button class="btn btn-ghost" id="resetRiskBtn">Start Over</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <div class="panel-head" style="padding:0;border:none;">Risk Register</div>
+          <div style="display:flex;align-items:center;gap:0.7rem;">
+            <span class="count" id="riskCount">0 entries</span>
+            <button class="btn btn-ghost btn-sm" id="exportRiskBtn">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="riskTable">
+            <thead><tr><th>Asset</th><th>Risk</th><th>Score</th><th>Control</th><th>Annex A</th><th>Owner</th><th>Vendor</th><th>Evidence</th><th></th></tr></thead>
+            <tbody id="riskBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="riskEmpty">No entries yet. Fill out the form on the left.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== VENDORS VIEW ===== -->
+  <div class="view" id="view-vendors">
+    <div class="layout split">
+      <div class="panel">
+        <div class="panel-head">New Vendor</div>
+        <div class="panel-body">
+          <label for="vendorName">Vendor Name</label>
+          <input type="text" id="vendorName" placeholder="e.g. PaymentGate API Provider">
+          <label for="vendorService">Service</label>
+          <input type="text" id="vendorService" placeholder="e.g. Payment processing">
+          <label for="vendorCriticality">Criticality</label>
+          <select id="vendorCriticality"><option>Low</option><option>Medium</option><option>High</option><option selected>Critical</option></select>
+          <label for="vendorOwner">Owner</label>
+          <input type="text" id="vendorOwner" placeholder="e.g. IT Vendor Management Team">
+
+          <div class="scoring">
+            <div><label style="margin-top:0.4rem;">Security (0–25)</label><input type="number" id="vSecurity" min="0" max="25" value="15"></div>
+            <div><label style="margin-top:0.4rem;">Compliance (0–25)</label><input type="number" id="vCompliance" min="0" max="25" value="15"></div>
+          </div>
+          <div class="scoring">
+            <div><label style="margin-top:0.4rem;">Financial (0–25)</label><input type="number" id="vFinancial" min="0" max="25" value="18"></div>
+            <div><label style="margin-top:0.4rem;">Operational (0–25)</label><input type="number" id="vOperational" min="0" max="25" value="16"></div>
+          </div>
+          <div id="vendorScoreBadge" class="score-badge"></div>
+
+          <label for="vendorReview">Next Review Date (mm/dd/yyyy)</label>
+          <input type="text" id="vendorReview" placeholder="e.g. 09/30/2027">
+
+          <label for="vendorFindings">Key Findings</label>
+          <textarea id="vendorFindings" placeholder="Brief assessment summary..."></textarea>
+
+          <label for="vendorEvidence">Evidence (certifications, reports, links)</label>
+          <textarea id="vendorEvidence" placeholder="e.g. PCI DSS Level 1 certificate (link), SOC 2 Type II report (link)..."></textarea>
+
+          <button class="btn" id="saveVendorBtn">Save Vendor</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <div class="panel-head" style="padding:0;border:none;">Vendors</div>
+          <span class="count" id="vendorCount">0 vendors</span>
+        </div>
+        <div class="table-wrap">
+          <table id="vendorTable">
+            <thead><tr><th>Vendor</th><th>Service</th><th>Criticality</th><th>Score</th><th>Rating</th><th>Owner</th><th>Evidence</th><th>Next Review</th><th>Linked Risks</th><th></th></tr></thead>
+            <tbody id="vendorBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="vendorEmpty">No vendors yet. Add the first one on the left.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ISSUES VIEW ===== -->
+  <div class="view" id="view-issues">
+    <div class="layout split">
+      <div class="panel">
+        <div class="panel-head">New Issue</div>
+        <div class="panel-body">
+          <label for="issueTitle">Title</label>
+          <input type="text" id="issueTitle" placeholder="e.g. Control lacks operating evidence">
+          <label for="issueCategory">Category</label>
+          <select id="issueCategory"><option>Process Gap</option><option>Compliance Gap</option><option>Security Finding</option><option>Vendor Issue</option></select>
+          <label for="issueSeverity">Severity</label>
+          <select id="issueSeverity"><option>Low</option><option>Medium</option><option>High</option><option selected>Critical</option></select>
+          <label for="issueLinkedRisk">Linked Risk (optional)</label>
+          <select id="issueLinkedRisk"><option value="">— none —</option></select>
+          <label for="issueOwner">Owner</label>
+          <input type="text" id="issueOwner" placeholder="e.g. Compliance Department">
+          <label for="issueDueDate">Due Date</label>
+          <input type="text" id="issueDueDate" placeholder="mm/dd/yyyy">
+          <label for="issueDescription">Description</label>
+          <textarea id="issueDescription"></textarea>
+          <button class="btn" id="saveIssueBtn">Create Issue</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="toolbar">
+          <div class="panel-head" style="padding:0;border:none;">Issue Tracker</div>
+          <span class="count" id="issueCount">0 issues</span>
+        </div>
+        <div class="table-wrap">
+          <table id="issueTable">
+            <thead><tr><th>Title</th><th>Category</th><th>Severity</th><th>Linked Risk</th><th>Owner</th><th>Due</th><th>Status</th><th></th></tr></thead>
+            <tbody id="issueBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="issueEmpty">No issues yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== POLICIES VIEW ===== -->
+  <div class="view" id="view-policies">
+    <div class="layout split">
+      <div class="panel">
+        <div class="panel-head">New Policy</div>
+        <div class="panel-body">
+          <label for="policyTitle">Policy Title</label>
+          <input type="text" id="policyTitle" placeholder="e.g. Access Control Policy">
+          <label for="policyAnnex">Related Annex A Control</label>
+          <input type="text" id="policyAnnex" placeholder="e.g. A.5.15 — Access control">
+          <label for="policyOwner">Policy Owner</label>
+          <input type="text" id="policyOwner" placeholder="e.g. IAM Team">
+          <label for="policyVersion">Version</label>
+          <input type="text" id="policyVersion" value="1.0">
+          <label for="policyStatus">Status</label>
+          <select id="policyStatus"><option>Draft</option><option>In Review</option><option>Approved</option></select>
+          <label for="policyReview">Next Review Date</label>
+          <input type="text" id="policyReview" placeholder="mm/dd/yyyy">
+          <label for="policyPurpose">Purpose / Scope</label>
+          <textarea id="policyPurpose" placeholder="What this policy governs and who it applies to..."></textarea>
+          <button class="btn" id="savePolicyBtn">Save Policy</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="toolbar">
+          <div class="panel-head" style="padding:0;border:none;">Policy Library</div>
+          <span class="count" id="policyCount">0 policies</span>
+        </div>
+        <div class="table-wrap">
+          <table id="policyTable">
+            <thead><tr><th>Policy</th><th>Annex A</th><th>Owner</th><th>Version</th><th>Status</th><th>Next Review</th><th></th></tr></thead>
+            <tbody id="policyBody"></tbody>
+          </table>
+        </div>
+        <div class="empty" id="policyEmpty">No policies yet. Add the first one on the left.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AUDIT LOG VIEW ===== -->
+  <div class="view" id="view-auditlog">
+    <div class="panel">
+      <div class="toolbar">
+        <div class="panel-head" style="padding:0;border:none;">Audit Log</div>
+        <div style="display:flex;align-items:center;gap:0.7rem;">
+          <span class="count" id="logCount">0 events</span>
+          <button class="btn btn-ghost btn-sm" id="exportLogBtn">Export CSV</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="logTable">
+          <thead><tr><th>Timestamp</th><th>Action</th><th>Module</th><th>Detail</th></tr></thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="logEmpty">No events recorded yet. Every create, update, or delete across all modules is logged here.</div>
+    </div>
+  </div>
+
+  <!-- ===== SOA VIEW ===== -->
+  <div class="view" id="view-soa">
+    <div class="panel">
+      <div class="toolbar">
+        <div class="panel-head" style="padding:0;border:none;">Statement of Applicability (ISO/IEC 27001 Annex A)</div>
+        <div style="display:flex;align-items:center;gap:0.7rem;">
+          <span class="count" id="soaCount">0 controls</span>
+          <button class="btn btn-ghost btn-sm" id="exportSoaBtn">Export CSV</button>
+        </div>
+      </div>
+      <div class="panel-body" style="padding-top:0.9rem;">
+        <p style="font-size:0.85rem;color:var(--ink-soft);margin-top:0;">
+          Auto-generated from controls referenced in the Risk Register. Each Annex A control marked "Applicable"
+          is justified by the linked risk(s) it addresses — the same traceability an ISO 27001 auditor expects to see.
+        </p>
+      </div>
+      <div class="table-wrap">
+        <table id="soaTable">
+          <thead><tr><th>Annex A Reference</th><th>Control Title</th><th>Applicability</th><th>Justification (linked risks)</th></tr></thead>
+          <tbody id="soaBody"></tbody>
+        </table>
+      </div>
+      <div class="empty" id="soaEmpty">No controls yet — add risks with Annex A references in the Risk Register first.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ Knowledge base (same as before) ============
+const KB = {
+  "Database": [
+    { risk: "External attacker exploits SQL injection vulnerability causing unauthorized data access and manipulation", control: "Enforce input validation and parameterized queries on all database-facing forms", annex: "A.8.28 — Secure coding", owner: "Application Development Team" },
+    { risk: "Internal employee exploits lack of role-based access control causing unauthorized data exfiltration", control: "Implement role-based access control (RBAC) restricting permissions to role requirements", annex: "A.8.3 — Information access restriction", owner: "IAM Team" },
+    { risk: "Attacker exploits missing encryption at rest causing exposure of stored data", control: "Enable AES-256 encryption for data at rest, with keys managed separately from storage", annex: "A.8.24 — Use of cryptography", owner: "IT Infrastructure Team" }
+  ],
+  "Employee Records": [
+    { risk: "HR staff exploits lack of data loss prevention controls causing unauthorized disclosure of employee data", control: "Deploy DLP solution to monitor and block unauthorized export of employee records", annex: "A.8.12 — Data leakage prevention", owner: "IT Security Team" },
+    { risk: "External attacker exploits phishing susceptibility of HR staff causing unauthorized payroll changes", control: "Require mandatory callback verification for any bank detail changes", annex: "A.8.5 — Secure authentication", owner: "HR Department" }
+  ],
+  "Financial Records": [
+    { risk: "Finance employee exploits lack of segregation of duties causing unauthorized manipulation of financial records", control: "Enforce segregation of duties via dual-approval workflows for transactions above threshold", annex: "A.5.3 — Segregation of duties", owner: "Finance Department" },
+    { risk: "Attacker exploits missing encryption causing exposure of financial records", control: "Enable encryption at rest for all financial data stores", annex: "A.8.24 — Use of cryptography", owner: "IT Infrastructure Team" },
+    { risk: "Employee exploits weak vendor payment controls causing fraudulent payments", control: "Require dual-approval for new vendor accounts and payments above defined threshold", annex: "A.5.19 — Information security in supplier relationships", owner: "Finance Department" }
+  ],
+  "Third-Party Vendor": [
+    { risk: "Organization proceeds with vendor integration despite unverified compliance certification causing regulatory non-compliance", control: "Require documented PCI DSS / SOC 2 Type II certification before vendor onboarding", annex: "A.5.20 — Addressing security within supplier agreements", owner: "Compliance Department" },
+    { risk: "Attacker exploits vendor security gaps causing exposure of shared data", control: "Require encryption and least-privilege access scope for all vendor integrations", annex: "A.8.24 — Use of cryptography", owner: "IT Security Team" },
+    { risk: "Vendor experiences service disruption causing dependent business process outage", control: "Establish contractual SLA with defined uptime and recovery time objectives", annex: "A.5.29 — Information security during disruption", owner: "Vendor Management Team" },
+    { risk: "Organization's reliance on a single vendor causes extended recovery time if vendor fails", control: "Identify and maintain a qualified backup vendor with tested activation plan", annex: "A.5.30 — ICT readiness for business continuity", owner: "Vendor Management Team" }
+  ],
+  "Network / Infrastructure": [
+    { risk: "Attacker exploits unpatched server vulnerabilities causing malware infection or system compromise", control: "Implement formal patch management program with defined remediation SLAs", annex: "A.8.8 — Management of technical vulnerabilities", owner: "IT Infrastructure Team" },
+    { risk: "Attacker exploits flat network architecture causing lateral movement after initial compromise", control: "Implement network segmentation isolating critical systems from general traffic", annex: "A.8.22 — Segregation of networks", owner: "Network Team" }
+  ],
+  "Cloud Service": [
+    { risk: "Misconfigured cloud storage exposes data to unauthorized public access", control: "Implement cloud security posture management (CSPM) with automated misconfiguration alerts", annex: "A.8.9 — Configuration management", owner: "Cloud / DevOps Team" }
+  ],
+  "Web Application": [
+    { risk: "Attacker exploits weak authentication causing unauthorized admin access", control: "Enforce multi-factor authentication (MFA) on all admin accounts", annex: "A.8.5 — Secure authentication", owner: "IAM Team" },
+    { risk: "External attacker exploits unsanitized user input causing SQL injection", control: "Implement input validation and parameterized queries", annex: "A.8.28 — Secure coding", owner: "Application Development Team" }
+  ]
+};
+
+// ============ State ============
+let risks = [], vendors = [], issues = [], policies = [], auditLog = [];
+
+function safeLoad() {
+  try { risks = JSON.parse(localStorage.getItem('grc_risks') || '[]'); } catch(e) { risks = []; }
+  try { vendors = JSON.parse(localStorage.getItem('grc_vendors') || '[]'); } catch(e) { vendors = []; }
+  try { issues = JSON.parse(localStorage.getItem('grc_issues') || '[]'); } catch(e) { issues = []; }
+  try { policies = JSON.parse(localStorage.getItem('grc_policies') || '[]'); } catch(e) { policies = []; }
+  try { auditLog = JSON.parse(localStorage.getItem('grc_auditlog') || '[]'); } catch(e) { auditLog = []; }
+}
+function saveAll() {
+  try {
+    localStorage.setItem('grc_risks', JSON.stringify(risks));
+    localStorage.setItem('grc_vendors', JSON.stringify(vendors));
+    localStorage.setItem('grc_issues', JSON.stringify(issues));
+    localStorage.setItem('grc_policies', JSON.stringify(policies));
+    localStorage.setItem('grc_auditlog', JSON.stringify(auditLog));
+  } catch(e) {}
+}
+function logAction(action, module, detail) {
+  auditLog.push({ id: Date.now() + Math.random(), ts: new Date().toISOString(), action, module, detail });
+}
+function parseUSDate(s) {
+  if (!s) return null;
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  return new Date(parseInt(m[3],10), parseInt(m[1],10)-1, parseInt(m[2],10));
+}
+function isOverdue(s) { const d = parseUSDate(s); return d ? d < new Date() : false; }
+function reviewCell(s) {
+  if (!s) return '—';
+  return isOverdue(s) ? '<span class="pill pill-critical">Overdue · ' + escapeHtml(s) + '</span>' : escapeHtml(s);
+}
+function escapeHtml(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
+function scoreInfo(score) {
+  if (score >= 12) return { label:'Critical', cls:'pill-critical' };
+  if (score >= 7) return { label:'High', cls:'pill-high' };
+  return { label:'Medium / Low', cls:'pill-medium' };
+}
+function vendorRatingInfo(score) {
+  if (score < 50) return { label:'Critical', cls:'pill-critical' };
+  if (score < 70) return { label:'High', cls:'pill-high' };
+  return { label:'Medium / Low', cls:'pill-medium' };
+}
+
+// ============ Tabs ============
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  });
+});
+
+// ============ Risk Register logic ============
+const assetTypeSelect = document.getElementById('assetType');
+Object.keys(KB).forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; assetTypeSelect.appendChild(o); });
+const customOpt = document.createElement('option'); customOpt.value = "__custom__"; customOpt.textContent = "Other / not listed"; assetTypeSelect.appendChild(customOpt);
+const placeholder = document.createElement('option'); placeholder.value=""; placeholder.textContent="— select type —"; placeholder.disabled=true; placeholder.selected=true;
+assetTypeSelect.insertBefore(placeholder, assetTypeSelect.firstChild);
+
+let selectedRiskIndex = null;
+
+function renderRiskOptions() {
+  const type = assetTypeSelect.value;
+  const section = document.getElementById('riskSection');
+  const box = document.getElementById('riskOptions');
+  box.innerHTML = ''; selectedRiskIndex = null;
+  document.getElementById('autofillSection').style.display = 'none';
+  if (!type) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  const list = KB[type] || [];
+  list.forEach((r, i) => {
+    const b = document.createElement('button'); b.className='risk-opt'; b.type='button'; b.innerHTML = r.risk;
+    b.addEventListener('click', () => selectRisk(type, i, b)); box.appendChild(b);
+  });
+  const customBtn = document.createElement('button'); customBtn.className='risk-opt'; customBtn.type='button';
+  customBtn.innerHTML = 'Write your own risk <span class="custom-tag">CUSTOM</span>';
+  customBtn.addEventListener('click', () => selectRisk(type, -1, customBtn)); box.appendChild(customBtn);
+}
+function selectRisk(type, index, btnEl) {
+  document.querySelectorAll('.risk-opt').forEach(el => el.classList.remove('selected'));
+  btnEl.classList.add('selected'); selectedRiskIndex = index;
+  document.getElementById('autofillSection').style.display = 'block';
+  if (index === -1) {
+    document.getElementById('riskText').value=''; document.getElementById('controlText').value='';
+    document.getElementById('annexText').value=''; document.getElementById('ownerText').value='';
+  } else {
+    const item = KB[type][index];
+    document.getElementById('riskText').value = item.risk;
+    document.getElementById('controlText').value = item.control;
+    document.getElementById('annexText').value = item.annex;
+    document.getElementById('ownerText').value = item.owner;
+  }
+  updateScoreBadge();
+}
+function updateScoreBadge() {
+  const l = parseInt(document.getElementById('likelihood').value,10);
+  const i = parseInt(document.getElementById('impact').value,10);
+  const score = l*i; const info = scoreInfo(score);
+  const badge = document.getElementById('scoreBadge');
+  badge.textContent = `Risk Score: ${score} (${l} × ${i}) — ${info.label}`;
+  badge.style.background = info.cls==='pill-critical' ? 'color-mix(in srgb, var(--red) 16%, transparent)' : info.cls==='pill-high' ? 'color-mix(in srgb, var(--amber) 18%, transparent)' : 'color-mix(in srgb, var(--green) 16%, transparent)';
+  badge.style.color = info.cls==='pill-critical' ? 'var(--red)' : info.cls==='pill-high' ? 'var(--amber)' : 'var(--green)';
+  const hint = document.getElementById('treatmentHint'); const sel = document.getElementById('treatmentSelect');
+  if (score >= 7 && !sel.dataset.userChosen) { sel.value='Mitigate'; hint.textContent='At this score, Mitigate is recommended.'; }
+  else if (!sel.dataset.userChosen) { hint.textContent=''; }
+}
+document.getElementById('likelihood').addEventListener('change', updateScoreBadge);
+document.getElementById('impact').addEventListener('change', updateScoreBadge);
+document.getElementById('treatmentSelect').addEventListener('change', function(){ this.dataset.userChosen='1'; });
+assetTypeSelect.addEventListener('change', renderRiskOptions);
+document.getElementById('resetRiskBtn').addEventListener('click', () => { document.getElementById('assetName').value=''; assetTypeSelect.value=''; renderRiskOptions(); });
+
+function refreshVendorDropdown() {
+  const sel = document.getElementById('linkedVendor');
+  sel.innerHTML = '<option value="">— none —</option>';
+  vendors.forEach(v => { const o = document.createElement('option'); o.value = v.id; o.textContent = v.name; sel.appendChild(o); });
+}
+
+document.getElementById('saveRiskBtn').addEventListener('click', () => {
+  const asset = document.getElementById('assetName').value.trim();
+  const type = assetTypeSelect.value;
+  const risk = document.getElementById('riskText').value.trim();
+  const control = document.getElementById('controlText').value.trim();
+  const annex = document.getElementById('annexText').value.trim();
+  const owner = document.getElementById('ownerText').value.trim();
+  const evidence = document.getElementById('evidenceText').value.trim();
+  const treatment = document.getElementById('treatmentSelect').value;
+  const vendorId = document.getElementById('linkedVendor').value;
+  const l = parseInt(document.getElementById('likelihood').value,10);
+  const i = parseInt(document.getElementById('impact').value,10);
+  if (!asset || !risk) { alert('Please provide an asset name and risk text.'); return; }
+  logAction('Created', 'Risk Register', asset + ' — ' + risk.slice(0,60)); risks.push({ id: Date.now(), asset, type, risk, control, annex, owner, evidence, treatment, vendorId: vendorId || null, likelihood:l, impact:i, score:l*i });
+  saveAll(); renderAll();
+  document.getElementById('assetName').value=''; assetTypeSelect.value='';
+  document.getElementById('evidenceText').value=''; document.getElementById('linkedVendor').value='';
+  const ts = document.getElementById('treatmentSelect'); ts.value=''; delete ts.dataset.userChosen;
+  renderRiskOptions();
+});
+
+function renderRiskTable() {
+  const body = document.getElementById('riskBody'); const empty = document.getElementById('riskEmpty'); const table = document.getElementById('riskTable');
+  body.innerHTML = ''; document.getElementById('riskCount').textContent = risks.length + (risks.length===1?' entry':' entries');
+  if (risks.length===0) { table.style.display='none'; empty.style.display='block'; return; }
+  table.style.display='table'; empty.style.display='none';
+  risks.slice().reverse().forEach(e => {
+    const info = scoreInfo(e.score); const hasEvidence = e.evidence && e.evidence.trim().length>0;
+    const vendor = vendors.find(v => v.id == e.vendorId);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(e.asset)}</strong><br><span style="color:var(--ink-soft);font-size:0.74rem;">${escapeHtml(e.type||'—')}</span></td>
+      <td style="max-width:200px;">${escapeHtml(e.risk)}</td>
+      <td><span class="pill ${info.cls}">${e.score} · ${info.label}</span></td>
+      <td style="max-width:180px;">${escapeHtml(e.control||'—')}</td>
+      <td class="annex-code">${escapeHtml(e.annex||'—')}</td>
+      <td>${escapeHtml(e.owner||'—')}</td>
+      <td>${vendor ? '<span class="link-tag">'+escapeHtml(vendor.name)+'</span>' : '—'}</td>
+      <td><span class="pill ${hasEvidence?'pill-medium':'pill-critical'}">${hasEvidence?'✓':'✗'}</span></td>
+      <td class="row-actions"><button data-id="${e.id}" class="del-risk">Delete</button></td>`;
+    body.appendChild(tr);
+  });
+  document.querySelectorAll('.del-risk').forEach(b => b.addEventListener('click', () => {
+    const _r = risks.find(x => x.id === parseInt(b.dataset.id,10)); if (_r) logAction('Deleted', 'Risk Register', _r.asset);
+    risks = risks.filter(x => x.id !== parseInt(b.dataset.id,10)); saveAll(); renderAll();
+  }));
+}
+document.getElementById('exportRiskBtn').addEventListener('click', () => {
+  if (risks.length===0) { alert('Register is empty.'); return; }
+  const headers = ['Asset','Type','Risk','Likelihood','Impact','Score','Control','Annex A','Owner','Vendor','Evidence','Treatment'];
+  const rows = risks.map(e => { const v = vendors.find(x=>x.id==e.vendorId); return [e.asset,e.type,e.risk,e.likelihood,e.impact,e.score,e.control,e.annex,e.owner, v?v.name:'', e.evidence, e.treatment]; });
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='risk_register.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+});
+
+// ============ Vendors logic ============
+function updateVendorScoreBadge() {
+  const s = parseInt(document.getElementById('vSecurity').value,10)||0;
+  const c = parseInt(document.getElementById('vCompliance').value,10)||0;
+  const f = parseInt(document.getElementById('vFinancial').value,10)||0;
+  const o = parseInt(document.getElementById('vOperational').value,10)||0;
+  const total = s+c+f+o; const info = vendorRatingInfo(total);
+  const badge = document.getElementById('vendorScoreBadge');
+  badge.textContent = `Total: ${total}/100 — ${info.label} Risk`;
+  badge.style.background = info.cls==='pill-critical' ? 'color-mix(in srgb, var(--red) 16%, transparent)' : info.cls==='pill-high' ? 'color-mix(in srgb, var(--amber) 18%, transparent)' : 'color-mix(in srgb, var(--green) 16%, transparent)';
+  badge.style.color = info.cls==='pill-critical' ? 'var(--red)' : info.cls==='pill-high' ? 'var(--amber)' : 'var(--green)';
+}
+['vSecurity','vCompliance','vFinancial','vOperational'].forEach(id => document.getElementById(id).addEventListener('input', updateVendorScoreBadge));
+
+document.getElementById('saveVendorBtn').addEventListener('click', () => {
+  const name = document.getElementById('vendorName').value.trim();
+  if (!name) { alert('Please provide a vendor name.'); return; }
+  const s = parseInt(document.getElementById('vSecurity').value,10)||0;
+  const c = parseInt(document.getElementById('vCompliance').value,10)||0;
+  const f = parseInt(document.getElementById('vFinancial').value,10)||0;
+  const o = parseInt(document.getElementById('vOperational').value,10)||0;
+  logAction('Created', 'Vendors', name);
+  vendors.push({
+    id: Date.now(), name,
+    service: document.getElementById('vendorService').value.trim(),
+    criticality: document.getElementById('vendorCriticality').value,
+    owner: document.getElementById('vendorOwner').value.trim(),
+    security:s, compliance:c, financial:f, operational:o, score:s+c+f+o,
+    findings: document.getElementById('vendorFindings').value.trim(),
+    evidence: document.getElementById('vendorEvidence').value.trim(),
+    reviewDate: document.getElementById('vendorReview').value.trim()
+  });
+  saveAll(); renderAll();
+  document.getElementById('vendorName').value=''; document.getElementById('vendorService').value='';
+  document.getElementById('vendorOwner').value=''; document.getElementById('vendorFindings').value='';
+  document.getElementById('vendorEvidence').value=''; document.getElementById('vendorReview').value='';
+});
+
+function renderVendorTable() {
+  const body = document.getElementById('vendorBody'); const empty = document.getElementById('vendorEmpty'); const table = document.getElementById('vendorTable');
+  body.innerHTML = ''; document.getElementById('vendorCount').textContent = vendors.length + (vendors.length===1?' vendor':' vendors');
+  if (vendors.length===0) { table.style.display='none'; empty.style.display='block'; return; }
+  table.style.display='table'; empty.style.display='none';
+  vendors.slice().reverse().forEach(v => {
+    const info = vendorRatingInfo(v.score);
+    const linkedRisks = risks.filter(r => r.vendorId == v.id);
+    const hasEvidence = v.evidence && v.evidence.trim().length > 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(v.name)}</strong></td>
+      <td>${escapeHtml(v.service||'—')}</td>
+      <td><span class="pill ${v.criticality==='Critical'?'pill-critical':v.criticality==='High'?'pill-high':'pill-medium'}">${escapeHtml(v.criticality)}</span></td>
+      <td>${v.score}/100</td>
+      <td><span class="pill ${info.cls}">${info.label}</span></td>
+      <td>${escapeHtml(v.owner||'—')}</td>
+      <td><span class="pill ${hasEvidence?'pill-medium':'pill-critical'}">${hasEvidence?'✓':'✗'}</span></td>
+      <td>${reviewCell(v.reviewDate)}</td>
+      <td>${linkedRisks.length>0 ? '<span class="link-tag">'+linkedRisks.length+' risk(s)</span>' : '—'}</td>
+      <td class="row-actions"><button data-id="${v.id}" class="del-vendor">Delete</button></td>`;
+    body.appendChild(tr);
+  });
+  document.querySelectorAll('.del-vendor').forEach(b => b.addEventListener('click', () => {
+    const _v = vendors.find(x => x.id === parseInt(b.dataset.id,10)); if (_v) logAction('Deleted', 'Vendors', _v.name);
+    vendors = vendors.filter(x => x.id !== parseInt(b.dataset.id,10)); saveAll(); renderAll();
+  }));
+}
+
+// ============ Issues logic ============
+function refreshIssueRiskDropdown() {
+  const sel = document.getElementById('issueLinkedRisk');
+  sel.innerHTML = '<option value="">— none —</option>';
+  risks.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = r.asset + ' — ' + r.risk.slice(0,40) + '...'; sel.appendChild(o); });
+}
+document.getElementById('saveIssueBtn').addEventListener('click', () => {
+  const title = document.getElementById('issueTitle').value.trim();
+  if (!title) { alert('Please provide a title.'); return; }
+  logAction('Created', 'Issue Tracker', title);
+  issues.push({
+    id: Date.now(), title,
+    category: document.getElementById('issueCategory').value,
+    severity: document.getElementById('issueSeverity').value,
+    linkedRiskId: document.getElementById('issueLinkedRisk').value || null,
+    owner: document.getElementById('issueOwner').value.trim(),
+    dueDate: document.getElementById('issueDueDate').value.trim(),
+    description: document.getElementById('issueDescription').value.trim(),
+    status: 'Open'
+  });
+  saveAll(); renderAll();
+  document.getElementById('issueTitle').value=''; document.getElementById('issueOwner').value='';
+  document.getElementById('issueDueDate').value=''; document.getElementById('issueDescription').value='';
+});
+
+function renderIssueTable() {
+  const body = document.getElementById('issueBody'); const empty = document.getElementById('issueEmpty'); const table = document.getElementById('issueTable');
+  body.innerHTML = ''; document.getElementById('issueCount').textContent = issues.length + (issues.length===1?' issue':' issues');
+  if (issues.length===0) { table.style.display='none'; empty.style.display='block'; return; }
+  table.style.display='table'; empty.style.display='none';
+  issues.slice().reverse().forEach(iss => {
+    const linkedRisk = risks.find(r => r.id == iss.linkedRiskId);
+    const sevCls = iss.severity==='Critical'?'pill-critical':iss.severity==='High'?'pill-high':'pill-medium';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="max-width:200px;"><strong>${escapeHtml(iss.title)}</strong></td>
+      <td>${escapeHtml(iss.category)}</td>
+      <td><span class="pill ${sevCls}">${escapeHtml(iss.severity)}</span></td>
+      <td>${linkedRisk ? '<span class="link-tag">'+escapeHtml(linkedRisk.asset)+'</span>' : '—'}</td>
+      <td>${escapeHtml(iss.owner||'—')}</td>
+      <td>${escapeHtml(iss.dueDate||'—')}</td>
+      <td>${escapeHtml(iss.status)}</td>
+      <td class="row-actions">
+        <button data-id="${iss.id}" class="close-issue">${iss.status==='Open'?'Close':'Reopen'}</button>
+        <button data-id="${iss.id}" class="del-issue">Delete</button>
+      </td>`;
+    body.appendChild(tr);
+  });
+  document.querySelectorAll('.del-issue').forEach(b => b.addEventListener('click', () => {
+    const _i = issues.find(x => x.id === parseInt(b.dataset.id,10)); if (_i) logAction('Deleted', 'Issue Tracker', _i.title);
+    issues = issues.filter(x => x.id !== parseInt(b.dataset.id,10)); saveAll(); renderAll();
+  }));
+  document.querySelectorAll('.close-issue').forEach(b => b.addEventListener('click', () => {
+    const iss = issues.find(x => x.id === parseInt(b.dataset.id,10));
+    iss.status = iss.status === 'Open' ? 'Closed' : 'Open'; logAction('Status changed to ' + iss.status, 'Issue Tracker', iss.title); saveAll(); renderAll();
+  }));
+}
+
+// ============ Dashboard ============
+function renderDashboard() {
+  const dash = document.getElementById('dashboard');
+  const totalAssets = risks.length;
+  const critical = risks.filter(e => e.score>=12).length;
+  const high = risks.filter(e => e.score>=7 && e.score<12).length;
+  const withEvidence = risks.filter(e => e.evidence && e.evidence.trim().length>0).length;
+  const evidencePct = totalAssets>0 ? Math.round((withEvidence/totalAssets)*100) : 0;
+  const openIssues = issues.filter(i => i.status==='Open').length;
+  const criticalVendors = vendors.filter(v => vendorRatingInfo(v.score).label==='Critical').length;
+  const overdueReviews = vendors.filter(v => isOverdue(v.reviewDate)).length;
+  const approvedPolicies = policies.filter(p => p.status === 'Approved').length;
+  const vendorsWithEvidence = vendors.filter(v => v.evidence && v.evidence.trim().length>0).length;
+  const vendorEvidencePct = vendors.length>0 ? Math.round((vendorsWithEvidence/vendors.length)*100) : 0;
+
+  dash.innerHTML = `
+    <div class="stat-cell"><div class="num">${totalAssets}</div><div class="lbl">Risks Tracked</div></div>
+    <div class="stat-cell crit"><div class="num">${critical}</div><div class="lbl">Critical Risks</div></div>
+    <div class="stat-cell high"><div class="num">${high}</div><div class="lbl">High Risks</div></div>
+    <div class="stat-cell ok"><div class="num">${evidencePct}%</div><div class="lbl">Risks with Evidence</div></div>
+    <div class="stat-cell"><div class="num">${vendors.length}</div><div class="lbl">Vendors</div></div>
+    <div class="stat-cell crit"><div class="num">${criticalVendors}</div><div class="lbl">Critical Vendors</div></div>
+    <div class="stat-cell ok"><div class="num">${vendorEvidencePct}%</div><div class="lbl">Vendors with Evidence</div></div>
+    <div class="stat-cell high"><div class="num">${openIssues}</div><div class="lbl">Open Issues</div></div>
+    <div class="stat-cell crit"><div class="num">${overdueReviews}</div><div class="lbl">Overdue Vendor Reviews</div></div>
+    <div class="stat-cell ok"><div class="num">${approvedPolicies}/${policies.length}</div><div class="lbl">Policies Approved</div></div>
+  `;
+}
+
+
+const FULL_ANNEX_A = [
+  ["A.5.1","Policies for information security"],["A.5.2","Information security roles and responsibilities"],
+  ["A.5.3","Segregation of duties"],["A.5.4","Management responsibilities"],
+  ["A.5.5","Contact with authorities"],["A.5.6","Contact with special interest groups"],
+  ["A.5.7","Threat intelligence"],["A.5.8","Information security in project management"],
+  ["A.5.9","Inventory of information and other associated assets"],["A.5.10","Acceptable use of information and other associated assets"],
+  ["A.5.11","Return of assets"],["A.5.12","Classification of information"],
+  ["A.5.13","Labelling of information"],["A.5.14","Information transfer"],
+  ["A.5.15","Access control"],["A.5.16","Identity management"],
+  ["A.5.17","Authentication information"],["A.5.18","Access rights"],
+  ["A.5.19","Information security in supplier relationships"],["A.5.20","Addressing security within supplier agreements"],
+  ["A.5.21","Managing information security in the ICT supply chain"],["A.5.22","Monitoring, review and change management of supplier services"],
+  ["A.5.23","Information security for use of cloud services"],["A.5.24","Information security incident management planning"],
+  ["A.5.25","Assessment and decision on information security events"],["A.5.26","Response to information security incidents"],
+  ["A.5.27","Learning from information security incidents"],["A.5.28","Collection of evidence"],
+  ["A.5.29","Information security during disruption"],["A.5.30","ICT readiness for business continuity"],
+  ["A.5.31","Legal, statutory, regulatory and contractual requirements"],["A.5.32","Intellectual property rights"],
+  ["A.5.33","Protection of records"],["A.5.34","Privacy and protection of PII"],
+  ["A.5.35","Independent review of information security"],["A.5.36","Compliance with policies, rules and standards"],
+  ["A.5.37","Documented operating procedures"],
+  ["A.6.1","Screening"],["A.6.2","Terms and conditions of employment"],
+  ["A.6.3","Information security awareness, education and training"],["A.6.4","Disciplinary process"],
+  ["A.6.5","Responsibilities after termination or change of employment"],["A.6.6","Confidentiality or non-disclosure agreements"],
+  ["A.6.7","Remote working"],["A.6.8","Information security event reporting"],
+  ["A.7.1","Physical security perimeters"],["A.7.2","Physical entry"],
+  ["A.7.3","Securing offices, rooms and facilities"],["A.7.4","Physical security monitoring"],
+  ["A.7.5","Protecting against physical and environmental threats"],["A.7.6","Working in secure areas"],
+  ["A.7.7","Clear desk and clear screen"],["A.7.8","Equipment siting and protection"],
+  ["A.7.9","Security of assets off-premises"],["A.7.10","Storage media"],
+  ["A.7.11","Supporting utilities"],["A.7.12","Cabling security"],
+  ["A.7.13","Equipment maintenance"],["A.7.14","Secure disposal or re-use of equipment"],
+  ["A.8.1","User endpoint devices"],["A.8.2","Privileged access rights"],
+  ["A.8.3","Information access restriction"],["A.8.4","Access to source code"],
+  ["A.8.5","Secure authentication"],["A.8.6","Capacity management"],
+  ["A.8.7","Protection against malware"],["A.8.8","Management of technical vulnerabilities"],
+  ["A.8.9","Configuration management"],["A.8.10","Information deletion"],
+  ["A.8.11","Data masking"],["A.8.12","Data leakage prevention"],
+  ["A.8.13","Information backup"],["A.8.14","Redundancy of information processing facilities"],
+  ["A.8.15","Logging"],["A.8.16","Monitoring activities"],
+  ["A.8.17","Clock synchronization"],["A.8.18","Use of privileged utility programs"],
+  ["A.8.19","Installation of software on operational systems"],["A.8.20","Networks security"],
+  ["A.8.21","Security of network services"],["A.8.22","Segregation of networks"],
+  ["A.8.23","Web filtering"],["A.8.24","Use of cryptography"],
+  ["A.8.25","Secure development life cycle"],["A.8.26","Application security requirements"],
+  ["A.8.27","Secure system architecture and engineering principles"],["A.8.28","Secure coding"],
+  ["A.8.29","Security testing in development and acceptance"],["A.8.30","Outsourced development"],
+  ["A.8.31","Separation of development, test and production environments"],["A.8.32","Change management"],
+  ["A.8.33","Test information"],["A.8.34","Protection of information systems during audit testing"]
+];
+
+// ============ SoA (Statement of Applicability) ============
+function renderSoA() {
+  const body = document.getElementById('soaBody');
+  const empty = document.getElementById('soaEmpty');
+  const table = document.getElementById('soaTable');
+  body.innerHTML = '';
+
+  const usage = {};
+  risks.forEach(r => {
+    if (!r.annex) return;
+    const code = r.annex.split(' — ')[0].trim();
+    if (!usage[code]) usage[code] = [];
+    usage[code].push(r.asset);
+  });
+
+  const applicableCount = Object.keys(usage).length;
+  document.getElementById('soaCount').textContent = applicableCount + ' of ' + FULL_ANNEX_A.length + ' controls applicable';
+
+  table.style.display = 'table'; empty.style.display = 'none';
+
+  FULL_ANNEX_A.forEach(([code, title]) => {
+    const used = usage[code];
+    const applicable = !!used;
+    const uniqueAssets = applicable ? [...new Set(used)] : [];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="annex-code">${escapeHtml(code)}</td>
+      <td>${escapeHtml(title)}</td>
+      <td><span class="pill ${applicable ? 'pill-medium' : ''}" style="${applicable?'':'color:var(--ink-soft);background:color-mix(in srgb, var(--line) 60%, transparent);'}">${applicable ? 'Applicable' : 'Not Applicable'}</span></td>
+      <td>${applicable ? 'Addresses risk(s) on: ' + uniqueAssets.map(a => '<span class="link-tag">'+escapeHtml(a)+'</span>').join(' ') : 'No corresponding risk identified in the Risk Register for this organization\'s current asset scope.'}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+document.getElementById('exportSoaBtn').addEventListener('click', () => {
+  const usage = {};
+  risks.forEach(r => {
+    if (!r.annex) return;
+    const code = r.annex.split(' — ')[0].trim();
+    if (!usage[code]) usage[code] = [];
+    usage[code].push(r.asset);
+  });
+  const headers = ['Annex A Reference','Control Title','Applicability','Justification'];
+  const rows = FULL_ANNEX_A.map(([code, title]) => {
+    const used = usage[code];
+    if (used) return [code, title, 'Applicable', 'Addresses risk(s) on: ' + [...new Set(used)].join(', ')];
+    return [code, title, 'Not Applicable', 'No corresponding risk identified in the Risk Register for this organization\'s current asset scope.'];
+  });
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='statement_of_applicability.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+});
+
+function renderTypeChart() {
+  const byType = {};
+  risks.forEach(r => { const k = r.type || 'Other'; byType[k] = byType[k] || { n:0, crit:0 }; byType[k].n++; if (r.score >= 12) byType[k].crit++; });
+  const rows = Object.entries(byType).sort((a,b) => b[1].n - a[1].n);
+  const max = Math.max(...rows.map(r => r[1].n));
+  const barH = 22, gap = 10, labelW = 150, chartW = 520;
+  const h = rows.length * (barH + gap) + 6;
+  let svg = `<svg viewBox="0 0 ${chartW + labelW + 40} ${h}" width="100%" role="img" aria-label="Risks by asset type" style="max-width:720px;">`;
+  rows.forEach(([name, v], idx) => {
+    const y = idx * (barH + gap) + 3;
+    const w = Math.max(4, (v.n / max) * chartW);
+    const critW = (v.crit / v.n) * w;
+    svg += `<text x="0" y="${y + 15}" font-size="12" fill="currentColor" font-family="IBM Plex Sans, sans-serif">${escapeHtml(name)}</text>`;
+    svg += `<rect x="${labelW}" y="${y}" width="${w}" height="${barH}" fill="#4B7A55" rx="2"/>`;
+    if (v.crit > 0) svg += `<rect x="${labelW}" y="${y}" width="${critW}" height="${barH}" fill="#A63A2E" rx="2"/>`;
+    svg += `<text x="${labelW + w + 8}" y="${y + 15}" font-size="12" fill="currentColor" font-family="IBM Plex Mono, monospace">${v.n}${v.crit ? ' ('+v.crit+' critical)' : ''}</text>`;
+  });
+  svg += '</svg>';
+  return `<div class="chart-wrap"><div class="matrix-axis-title" style="text-align:left;margin:1.2rem 0 0.5rem;">Risks by asset type — <span style="color:#A63A2E;">red = critical share</span></div>${svg}</div>`;
+}
+
+function riskColor(l, i) {
+  const s = l * i;
+  if (s >= 15) return '#A63A2E';
+  if (s >= 10) return '#C2542E';
+  if (s >= 7) return '#B5772B';
+  if (s >= 4) return '#B59B3E';
+  return '#4B7A55';
+}
+function renderRiskMatrix() {
+  const container = document.getElementById('riskMatrixContainer');
+  if (risks.length === 0) {
+    container.innerHTML = '<p style="color:var(--ink-soft);font-size:0.85rem;">No risks yet — the matrix will populate as you add entries to the Risk Register.</p>';
+    return;
+  }
+  const counts = {};
+  risks.forEach(r => { const k = r.likelihood + '-' + r.impact; counts[k] = (counts[k]||0) + 1; });
+
+  let gridHtml = '';
+  for (let impact = 5; impact >= 1; impact--) {
+    for (let l = 1; l <= 5; l++) {
+      const key = l + '-' + impact;
+      const c = counts[key] || 0;
+      const bg = c > 0 ? riskColor(l, impact) : 'color-mix(in srgb, var(--line) 60%, var(--card))';
+      gridHtml += `<div class="matrix-cell" style="background:${bg};" title="Likelihood ${l} × Impact ${impact} = ${l*impact}">${c > 0 ? '<span class="cell-count">'+c+'</span>' : ''}</div>`;
+    }
+  }
+  const yLabels = ['5','4','3','2','1'].map(n => `<span>${n}</span>`).join('');
+  const xLabels = ['1','2','3','4','5'].map(n => `<div>${n}</div>`).join('');
+
+  container.innerHTML = `
+    <div class="matrix-wrap">
+      <div class="matrix-y-title">IMPACT</div>
+      <div class="matrix-yaxis">${yLabels}</div>
+      <div><div class="matrix-grid">${gridHtml}</div>
+        <div class="matrix-xaxis">${xLabels}</div>
+        <div class="matrix-axis-title" style="margin-left:0;">LIKELIHOOD</div>
+      </div>
+    </div>
+    ${renderTypeChart()}
+    <p style="font-size:0.76rem;color:var(--ink-soft);margin-top:0.8rem;">Each cell shows the number of risks at that Likelihood × Impact combination. Color intensity reflects severity — darker red indicates higher-priority risks requiring immediate attention.</p>
+  `;
+}
+
+// ============ Policy Library ============
+document.getElementById('savePolicyBtn').addEventListener('click', () => {
+  const title = document.getElementById('policyTitle').value.trim();
+  if (!title) { alert('Please provide a policy title.'); return; }
+  logAction('Created', 'Policy Library', title + ' v' + document.getElementById('policyVersion').value.trim());
+  policies.push({
+    id: Date.now(), title,
+    annex: document.getElementById('policyAnnex').value.trim(),
+    owner: document.getElementById('policyOwner').value.trim(),
+    version: document.getElementById('policyVersion').value.trim() || '1.0',
+    status: document.getElementById('policyStatus').value,
+    reviewDate: document.getElementById('policyReview').value.trim(),
+    purpose: document.getElementById('policyPurpose').value.trim()
+  });
+  saveAll(); renderAll();
+  ['policyTitle','policyAnnex','policyOwner','policyReview','policyPurpose'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('policyVersion').value = '1.0';
+});
+
+function renderPolicies() {
+  const body = document.getElementById('policyBody'); const empty = document.getElementById('policyEmpty'); const table = document.getElementById('policyTable');
+  body.innerHTML = '';
+  document.getElementById('policyCount').textContent = policies.length + (policies.length===1 ? ' policy' : ' policies');
+  if (policies.length === 0) { table.style.display='none'; empty.style.display='block'; return; }
+  table.style.display='table'; empty.style.display='none';
+  const nextStatus = { 'Draft':'In Review', 'In Review':'Approved', 'Approved':null };
+  policies.slice().reverse().forEach(p => {
+    const cls = p.status === 'Approved' ? 'pill-medium' : p.status === 'In Review' ? 'pill-high' : 'pill-critical';
+    const adv = nextStatus[p.status];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(p.title)}</strong>${p.purpose ? '<br><span style="color:var(--ink-soft);font-size:0.74rem;">'+escapeHtml(p.purpose.slice(0,90))+'</span>' : ''}</td>
+      <td class="annex-code">${escapeHtml(p.annex||'—')}</td>
+      <td>${escapeHtml(p.owner||'—')}</td>
+      <td>v${escapeHtml(p.version)}</td>
+      <td><span class="pill ${cls}">${escapeHtml(p.status)}</span></td>
+      <td>${escapeHtml(p.reviewDate||'—')}</td>
+      <td class="row-actions">
+        ${adv ? '<button data-id="'+p.id+'" class="adv-policy">→ '+adv+'</button>' : ''}
+        <button data-id="${p.id}" class="del-policy">Delete</button>
+      </td>`;
+    body.appendChild(tr);
+  });
+  document.querySelectorAll('.adv-policy').forEach(b => b.addEventListener('click', () => {
+    const p = policies.find(x => x.id === parseInt(b.dataset.id,10));
+    p.status = nextStatus[p.status]; logAction('Status changed to ' + p.status, 'Policy Library', p.title);
+    saveAll(); renderAll();
+  }));
+  document.querySelectorAll('.del-policy').forEach(b => b.addEventListener('click', () => {
+    const p = policies.find(x => x.id === parseInt(b.dataset.id,10)); if (p) logAction('Deleted', 'Policy Library', p.title);
+    policies = policies.filter(x => x.id !== parseInt(b.dataset.id,10)); saveAll(); renderAll();
+  }));
+}
+
+// ============ Audit Log ============
+function renderAuditLog() {
+  const body = document.getElementById('logBody'); const empty = document.getElementById('logEmpty'); const table = document.getElementById('logTable');
+  body.innerHTML = '';
+  document.getElementById('logCount').textContent = auditLog.length + (auditLog.length===1 ? ' event' : ' events');
+  if (auditLog.length === 0) { table.style.display='none'; empty.style.display='block'; return; }
+  table.style.display='table'; empty.style.display='none';
+  auditLog.slice().reverse().slice(0, 200).forEach(e => {
+    const d = new Date(e.ts);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:0.74rem;">${d.toLocaleString()}</td>
+      <td>${escapeHtml(e.action)}</td>
+      <td><span class="link-tag">${escapeHtml(e.module)}</span></td>
+      <td>${escapeHtml(e.detail)}</td>`;
+    body.appendChild(tr);
+  });
+}
+document.getElementById('exportLogBtn').addEventListener('click', () => {
+  if (auditLog.length === 0) { alert('No events to export yet.'); return; }
+  const headers = ['Timestamp','Action','Module','Detail'];
+  const rows = auditLog.map(e => [e.ts, e.action, e.module, e.detail]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='audit_log.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+});
+
+function renderAll() {
+  refreshVendorDropdown(); refreshIssueRiskDropdown();
+  renderRiskTable(); renderVendorTable(); renderIssueTable(); renderDashboard(); renderSoA(); renderRiskMatrix();
+  renderPolicies(); renderAuditLog();
+}
+
+safeLoad();
+updateVendorScoreBadge();
+renderAll();
+</script>
+</body>
+</html>
